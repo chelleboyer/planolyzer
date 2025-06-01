@@ -1,0 +1,5 @@
+chainlit
+opencv-python
+numpy
+pandas
+pillow

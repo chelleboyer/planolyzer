@@ -1,0 +1,322 @@
+[
+    {
+        "sku": "756857",
+        "name": "Marlboro Red 1",
+        "x": 25,
+        "y": 45,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "756857",
+        "name": "Marlboro Red 2",
+        "x": 85,
+        "y": 45,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "756858",
+        "name": "Marlboro Gold 1",
+        "x": 145,
+        "y": 45,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "756858",
+        "name": "Marlboro Gold 2",
+        "x": 205,
+        "y": 45,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "145633",
+        "name": "Pall Mall Blue 1",
+        "x": 265,
+        "y": 45,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "145633",
+        "name": "Pall Mall Blue 2",
+        "x": 325,
+        "y": 45,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "145637",
+        "name": "Pall Mall 1",
+        "x": 385,
+        "y": 45,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "145637",
+        "name": "Pall Mall 2",
+        "x": 445,
+        "y": 45,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "344333",
+        "name": "Marlboro Menthol 1",
+        "x": 25,
+        "y": 195,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "344333",
+        "name": "Marlboro Menthol 2",
+        "x": 85,
+        "y": 195,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "674788",
+        "name": "Newport 1",
+        "x": 145,
+        "y": 195,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "674788",
+        "name": "Newport 2",
+        "x": 205,
+        "y": 195,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "876555",
+        "name": "Camel Blue 1",
+        "x": 265,
+        "y": 195,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "876555",
+        "name": "Camel Blue 2",
+        "x": 325,
+        "y": 195,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "876560",
+        "name": "Camel Gold 1",
+        "x": 385,
+        "y": 195,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "876560",
+        "name": "Camel Gold 2",
+        "x": 445,
+        "y": 195,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "674790",
+        "name": "Newport 2 1",
+        "x": 25,
+        "y": 345,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "674790",
+        "name": "Newport 2 2",
+        "x": 85,
+        "y": 345,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "876558",
+        "name": "Camel Cream 1",
+        "x": 145,
+        "y": 345,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "876558",
+        "name": "Camel Cream 2",
+        "x": 205,
+        "y": 345,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "876560",
+        "name": "Camel Tan 1",
+        "x": 265,
+        "y": 345,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "876560",
+        "name": "Camel Tan 2",
+        "x": 325,
+        "y": 345,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "876560",
+        "name": "Camel Tan 3",
+        "x": 385,
+        "y": 345,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "876560",
+        "name": "Camel Tan 4",
+        "x": 445,
+        "y": 345,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "674792",
+        "name": "Newport 3 1",
+        "x": 25,
+        "y": 495,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "674792",
+        "name": "Newport 3 2",
+        "x": 85,
+        "y": 495,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "99886",
+        "name": "Winston 1",
+        "x": 145,
+        "y": 495,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "99886",
+        "name": "Winston 2",
+        "x": 205,
+        "y": 495,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "99900",
+        "name": "Winston Light 1",
+        "x": 265,
+        "y": 495,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "99900",
+        "name": "Winston Light 2",
+        "x": 325,
+        "y": 495,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "99900",
+        "name": "Winston Light 3",
+        "x": 385,
+        "y": 495,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "99900",
+        "name": "Winston Light 4",
+        "x": 445,
+        "y": 495,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "344344",
+        "name": "Kool 1",
+        "x": 25,
+        "y": 645,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "344344",
+        "name": "Kool 2",
+        "x": 85,
+        "y": 645,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "344345",
+        "name": "Kool Light 1",
+        "x": 145,
+        "y": 645,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "344345",
+        "name": "Kool Light 2",
+        "x": 205,
+        "y": 645,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "46367",
+        "name": "American Spirit Gold 1",
+        "x": 265,
+        "y": 645,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "46367",
+        "name": "American Spirit Gold 2",
+        "x": 325,
+        "y": 645,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "46368",
+        "name": "American Spirit Blue 1",
+        "x": 385,
+        "y": 645,
+        "width": 59,
+        "height": 95
+    },
+    {
+        "sku": "46368",
+        "name": "American Spirit Blue 2",
+        "x": 445,
+        "y": 645,
+        "width": 59,
+        "height": 95
+    }
+]
