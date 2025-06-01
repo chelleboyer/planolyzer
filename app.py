@@ -122,136 +122,128 @@ async def start():
     welcome_msg = """
 # Welcome to Planolyzer! 🛍️
 
-## How to use:
-1. Download the reference images below
-2. Create some empty spaces on your the reference planogram
-3. Upload your photo to compare with the reference
-
-## Reference Images:
+## Quick Start:
+1. Download the test image below
+2. Upload it back to see how the system works
+3. Try creating your own test image by adding empty spaces to the reference planogram
 """
     
-    # Create elements for downloadable images
-    elements = [
-        cl.Image(
-            name="planogram",
-            path=str(REFERENCE_IMAGE),
-            display="inline",
-            size="small"
-        ),
-        cl.File(
-            name="planogram.png",
-            path=str(REFERENCE_IMAGE),
-            display="inline"
-        ),
-        cl.Image(
-            name="empty_space",
-            path=str(BASE_DIR / 'data' / 'planogram001' / 'empty-space.png'),
-            display="inline",
-            size="small"
-        ),
-        cl.File(
-            name="empty-space.png",
-            path=str(BASE_DIR / 'data' / 'planogram001' / 'empty-space.png'),
-            display="inline"
-        )
-    ]
+    # Send welcome message
+    await cl.Message(content=welcome_msg).send()
     
-    # Send welcome message with images
+    # Send reference planogram
     await cl.Message(
-        content=welcome_msg,
-        elements=elements
+        content="## Reference Planogram:",
+        elements=[
+            cl.Image(
+                name="planogram",
+                path=str(REFERENCE_IMAGE),
+                display="inline",
+                size="medium"
+            ),
+            cl.File(
+                name="planogram.png",
+                path=str(REFERENCE_IMAGE),
+                display="inline"
+            ),
+            cl.Image(
+                name="empty_space",
+                path=str(BASE_DIR / 'data' / 'planogram001' / 'empty-space.png'),
+                display="inline",
+                size="small"
+            ),
+            cl.File(
+                name="empty-space.png",
+                path=str(BASE_DIR / 'data' / 'planogram001' / 'empty-space.png'),
+                display="inline"
+            )
+        ]
     ).send()
     
-    # Send test image option
-    test_image_msg = """
-## Test Image:
-You can also download this test shelf image to try out the system:
-"""
-    test_elements = [
-        cl.Image(
-            name="test_shelf",
-            path=str(BASE_DIR / 'data' / 'test_shelf_image_cig_003.png'),
-            display="inline",
-            size="small"
-        ),
-        cl.File(
-            name="test_shelf_image_cig_003.png",
-            path=str(BASE_DIR / 'data' / 'test_shelf_image_cig_003.png'),
-            display="inline"
-        )
-    ]
-    
+    # Send test image
     await cl.Message(
-        content=test_image_msg,
-        elements=test_elements
+        content="## Test Image:",
+        elements=[
+            cl.Image(
+                name="test_shelf",
+                path=str(BASE_DIR / 'data' / 'test_shelf_image_cig_003.png'),
+                display="inline",
+                size="medium"
+            ),
+            cl.File(
+                name="test_shelf_image_cig_003.png",
+                path=str(BASE_DIR / 'data' / 'test_shelf_image_cig_003.png'),
+                display="inline"
+            )
+        ]
     ).send()
     
     # Send additional instructions
     await cl.Message(
-        content="Once you have your photo ready, upload it to compare with the reference planogram and check for empty spaces!"
+        content="Try downloading and uploading the test image first to see how the system works!"
     ).send()
 
 @cl.on_message
 async def main(message: cl.Message):
     """Handle incoming messages and image uploads."""
-    if not message.elements:
-        await cl.Message(
-            content="Please upload an image to compare with the reference planogram."
-        ).send()
+    # If there are no elements and no message content, do nothing
+    if not message.elements and not message.content:
         return
 
-    # Get the uploaded image
-    uploaded_image = message.elements[0]
-    if not uploaded_image.mime.startswith('image/'):
-        await cl.Message(
-            content="Please upload a valid image file."
-        ).send()
-        return
-
-    try:
-        # Convert uploaded image to OpenCV format
-        img_path = uploaded_image.path
-        uploaded_img = cv2.imread(img_path)
-        if uploaded_img is None:
+    # If there are elements, process them regardless of message content
+    if message.elements:
+        # Get the uploaded image
+        uploaded_image = message.elements[0]
+        if not uploaded_image.mime.startswith('image/'):
             await cl.Message(
-                content="Error: Could not read the uploaded image. Please try again with a different image."
+                content="Please upload a valid image file."
             ).send()
             return
 
-        # Load reference image
-        ref_img = load_reference_image()
-        if ref_img is None:
+        try:
+            # Convert uploaded image to OpenCV format
+            img_path = uploaded_image.path
+            uploaded_img = cv2.imread(img_path)
+            if uploaded_img is None:
+                await cl.Message(
+                    content="Error: Could not read the uploaded image. Please try again with a different image."
+                ).send()
+                return
+
+            # Load reference image
+            ref_img = load_reference_image()
+            if ref_img is None:
+                await cl.Message(
+                    content="Error: Reference planogram image not found."
+                ).send()
+                return
+
+            # Compare images using CLIP
+            comparison_result = compare_images(ref_img, uploaded_img)
+
+            # Prepare response
+            if comparison_result['is_similar']:
+                # Image is accepted, proceed with empty space analysis
+                await cl.Message(
+                    content=f"✅ Image accepted! Similarity score: {comparison_result['similarity_score']:.2f}\n\nAnalyzing empty spaces..."
+                ).send()
+                
+                # Perform empty space analysis
+                analysis_result = check_empty_spaces(uploaded_img)
+                await cl.Message(content=analysis_result).send()
+            else:
+                # Image is rejected
+                response = f"❌ No go! Image rejected.\n"
+                response += f"Similarity score: {comparison_result['similarity_score']:.2f}\n"
+                response += f"Difference percentage: {comparison_result['difference_percentage']:.2f}%\n\n"
+                response += "Please upload a different image that better matches the reference planogram."
+                await cl.Message(content=response).send()
+
+        except Exception as e:
+            logger.error(f"Error processing image: {str(e)}")
             await cl.Message(
-                content="Error: Reference planogram image not found."
+                content=f"Error processing image: {str(e)}"
             ).send()
-            return
-
-        # Compare images using CLIP
-        comparison_result = compare_images(ref_img, uploaded_img)
-
-        # Prepare response
-        if comparison_result['is_similar']:
-            # Image is accepted, proceed with empty space analysis
-            await cl.Message(
-                content=f"✅ Image accepted! Similarity score: {comparison_result['similarity_score']:.2f}\n\nAnalyzing empty spaces..."
-            ).send()
-            
-            # Perform empty space analysis
-            analysis_result = check_empty_spaces(uploaded_img)
-            await cl.Message(content=analysis_result).send()
-        else:
-            # Image is rejected
-            response = f"❌ No go! Image rejected.\n"
-            response += f"Similarity score: {comparison_result['similarity_score']:.2f}\n"
-            response += f"Difference percentage: {comparison_result['difference_percentage']:.2f}%\n\n"
-            response += "Please upload a different image that better matches the reference planogram."
-            await cl.Message(content=response).send()
-
-    except Exception as e:
-        logger.error(f"Error processing image: {str(e)}")
-        await cl.Message(
-            content=f"Error processing image: {str(e)}"
-        ).send()
 
 def check_empty_spaces(shelf_img):
     try:
