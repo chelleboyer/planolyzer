@@ -118,8 +118,77 @@ async def start():
         ).send()
         return
     
+    # Create a welcome message with instructions
+    welcome_msg = """
+# Welcome to Planolyzer! 🛍️
+
+## How to use:
+1. Download the reference images below
+2. Create some empty spaces on your the reference planogram
+3. Upload your photo to compare with the reference
+
+## Reference Images:
+"""
+    
+    # Create elements for downloadable images
+    elements = [
+        cl.Image(
+            name="planogram",
+            path=str(REFERENCE_IMAGE),
+            display="inline",
+            size="small"
+        ),
+        cl.File(
+            name="planogram.png",
+            path=str(REFERENCE_IMAGE),
+            display="inline"
+        ),
+        cl.Image(
+            name="empty_space",
+            path=str(BASE_DIR / 'data' / 'planogram001' / 'empty-space.png'),
+            display="inline",
+            size="small"
+        ),
+        cl.File(
+            name="empty-space.png",
+            path=str(BASE_DIR / 'data' / 'planogram001' / 'empty-space.png'),
+            display="inline"
+        )
+    ]
+    
+    # Send welcome message with images
     await cl.Message(
-        content="Welcome to Planolyzer! Please upload an image to compare with the reference planogram."
+        content=welcome_msg,
+        elements=elements
+    ).send()
+    
+    # Send test image option
+    test_image_msg = """
+## Test Image:
+You can also download this test shelf image to try out the system:
+"""
+    test_elements = [
+        cl.Image(
+            name="test_shelf",
+            path=str(BASE_DIR / 'data' / 'test_shelf_image_cig_003.png'),
+            display="inline",
+            size="small"
+        ),
+        cl.File(
+            name="test_shelf_image_cig_003.png",
+            path=str(BASE_DIR / 'data' / 'test_shelf_image_cig_003.png'),
+            display="inline"
+        )
+    ]
+    
+    await cl.Message(
+        content=test_image_msg,
+        elements=test_elements
+    ).send()
+    
+    # Send additional instructions
+    await cl.Message(
+        content="Once you have your photo ready, upload it to compare with the reference planogram and check for empty spaces!"
     ).send()
 
 @cl.on_message
