@@ -3,3 +3,8 @@ opencv-python
 numpy
 pandas
 pillow
+torch
+transformers
+ftfy
+regex
+tqdm

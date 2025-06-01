@@ -5,6 +5,10 @@ import json
 import os
 import logging
 from pathlib import Path
+from PIL import Image
+import io
+import torch
+from transformers import CLIPProcessor, CLIPModel
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -14,6 +18,14 @@ logger = logging.getLogger(__name__)
 BASE_DIR = Path(__file__).parent
 PLANOGRAM_JSON = BASE_DIR / 'data' / 'product_positions_adjusted_v10.json'
 PLANOGRAM_IMAGE = BASE_DIR / 'data' / 'shelf_overlay_adjusted_v10.jpg'
+
+# Load the reference planogram image
+REFERENCE_IMAGE = BASE_DIR / 'data' / 'planogram001' / "planogram.png"
+
+# Initialize CLIP model and processor
+device = "cuda" if torch.cuda.is_available() else "cpu"
+model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to(device)
+processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
 
 def validate_image(image, name="image"):
     """Validate that an image is properly loaded and has valid dimensions."""
@@ -48,55 +60,129 @@ except Exception as e:
     logger.error(f"Error loading planogram image: {str(e)}")
     raise
 
+def load_reference_image():
+    """Load and preprocess the reference planogram image."""
+    try:
+        ref_img = Image.open(REFERENCE_IMAGE)
+        if ref_img is None:
+            raise FileNotFoundError(f"Reference image {REFERENCE_IMAGE} not found")
+        return ref_img
+    except Exception as e:
+        print(f"Error loading reference image: {e}")
+        return None
+
+def compare_images(ref_img, uploaded_img):
+    """Compare the uploaded image with the reference image using CLIP."""
+    try:
+        # Convert OpenCV image to PIL Image
+        if isinstance(uploaded_img, np.ndarray):
+            uploaded_img = Image.fromarray(cv2.cvtColor(uploaded_img, cv2.COLOR_BGR2RGB))
+        
+        # Process images with CLIP
+        inputs = processor(
+            images=[ref_img, uploaded_img],
+            return_tensors="pt",
+            padding=True
+        ).to(device)
+        
+        # Get image features
+        with torch.no_grad():
+            image_features = model.get_image_features(**inputs)
+            image_features = image_features / image_features.norm(dim=1, keepdim=True)
+        
+        # Calculate similarity
+        similarity = torch.nn.functional.cosine_similarity(
+            image_features[0].unsqueeze(0),
+            image_features[1].unsqueeze(0)
+        ).item()
+        
+        # Calculate difference percentage (inverse of similarity)
+        diff_percentage = (1 - similarity) * 100
+        
+        return {
+            'similarity_score': similarity,
+            'difference_percentage': diff_percentage,
+            'is_similar': similarity > 0.85  # CLIP typically needs a higher threshold
+        }
+    except Exception as e:
+        logger.error(f"Error in CLIP comparison: {str(e)}")
+        raise
+
 @cl.on_chat_start
 async def start():
+    """Initialize the chat session."""
+    ref_img = load_reference_image()
+    if ref_img is None:
+        await cl.Message(
+            content="Error: Reference planogram image not found. Please ensure planogram.png exists in the project directory."
+        ).send()
+        return
+    
     await cl.Message(
-        "📸 Welcome to the Shelf Checker App!\n\n"
-        "Upload your shelf photo below and I'll check for any missing products.\n"
-        "Make sure the photo is well-lit and shows the entire shelf clearly."
+        content="Welcome to Planolyzer! Please upload an image to compare with the reference planogram."
     ).send()
 
 @cl.on_message
 async def main(message: cl.Message):
+    """Handle incoming messages and image uploads."""
+    if not message.elements:
+        await cl.Message(
+            content="Please upload an image to compare with the reference planogram."
+        ).send()
+        return
+
+    # Get the uploaded image
+    uploaded_image = message.elements[0]
+    if not uploaded_image.mime.startswith('image/'):
+        await cl.Message(
+            content="Please upload a valid image file."
+        ).send()
+        return
+
     try:
-        # Check if message has files
-        if not message.elements:
-            await cl.Message("Please upload a shelf photo to analyze.").send()
-            return
-
-        # Get the first file
-        file = message.elements[0]
-        if not file.path.endswith(('.jpg', '.jpeg', '.png')):
-            await cl.Message("Please upload a JPG or PNG image file.").send()
-            return
-
-        # Show processing message
-        await cl.Message("⏳ Processing your image...").send()
-        
-        # Read and validate image
-        shelf_img = cv2.imread(file.path)
-        validate_image(shelf_img, "uploaded image")
-        
-        # Check if image dimensions match planogram
-        h_plan, w_plan = planogram_image.shape[:2]
-        h_shelf, w_shelf = shelf_img.shape[:2]
-        
-        if abs(h_plan - h_shelf) > 50 or abs(w_plan - w_shelf) > 50:
-            logger.warning(f"Image dimensions mismatch: Planogram {w_plan}x{h_plan}, Shelf {w_shelf}x{h_shelf}")
+        # Convert uploaded image to OpenCV format
+        img_path = uploaded_image.path
+        uploaded_img = cv2.imread(img_path)
+        if uploaded_img is None:
             await cl.Message(
-                "⚠️ Warning: The uploaded image dimensions don't match the planogram.\n"
-                "This might affect the accuracy of the results."
+                content="Error: Could not read the uploaded image. Please try again with a different image."
             ).send()
-        
-        # Process image and get report
-        report = check_empty_spaces(shelf_img)
-        
-        # Send results as a new message
-        await cl.Message(report).send()
-        
+            return
+
+        # Load reference image
+        ref_img = load_reference_image()
+        if ref_img is None:
+            await cl.Message(
+                content="Error: Reference planogram image not found."
+            ).send()
+            return
+
+        # Compare images using CLIP
+        comparison_result = compare_images(ref_img, uploaded_img)
+
+        # Prepare response
+        if comparison_result['is_similar']:
+            # Image is accepted, proceed with empty space analysis
+            await cl.Message(
+                content=f"✅ Image accepted! Similarity score: {comparison_result['similarity_score']:.2f}\n\nAnalyzing empty spaces..."
+            ).send()
+            
+            # Perform empty space analysis
+            analysis_result = check_empty_spaces(uploaded_img)
+            await cl.Message(content=analysis_result).send()
+        else:
+            # Image is rejected
+            response = f"❌ No go! Image rejected.\n"
+            response += f"Similarity score: {comparison_result['similarity_score']:.2f}\n"
+            response += f"Difference percentage: {comparison_result['difference_percentage']:.2f}%\n\n"
+            response += "Please upload a different image that better matches the reference planogram."
+            await cl.Message(content=response).send()
+
     except Exception as e:
-        logger.error(f"Error processing uploaded image: {str(e)}")
-        await cl.Message(f"❌ Error processing image: {str(e)}").send()
+        logger.error(f"Error processing image: {str(e)}")
+        await cl.Message(
+            content=f"Error processing image: {str(e)}"
+        ).send()
 
 def check_empty_spaces(shelf_img):
     try:
