@@ -1,13 +1,23 @@
 # Planolyzer
 
-A Python-based application for analyzing and processing images using modern computer vision techniques.
+A planogram analysis tool that helps verify if retail shelf displays match their intended layout.
 
 ## Features
+- Compare uploaded shelf images with reference planograms
+- Detect empty spaces on shelves
+- Provide similarity scores and analysis
+- Easy-to-use interface with visual feedback
 
-- Image processing and analysis using OpenCV
-- Data manipulation with Pandas and NumPy
-- Interactive UI powered by Chainlit
-- Image handling with Pillow
+## How to Use
+1. Upload an image of your shelf
+2. The system will automatically compare it with the reference planogram
+3. Get instant feedback on empty spaces and layout compliance
+
+## Technical Details
+- Built with Chainlit
+- Uses CLIP for image comparison
+- OpenCV for image processing
+- PyTorch for deep learning operations
 
 ## Prerequisites
 

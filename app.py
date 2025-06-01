@@ -244,6 +244,11 @@ async def main(message: cl.Message):
             await cl.Message(
                 content=f"Error processing image: {str(e)}"
             ).send()
+    else:
+        # Handle text-only messages
+        await cl.Message(
+            content="👋 Hi! I'm here to help you analyze planogram images. Please upload an image to get started. You can use the test image provided above to try out the system!"
+        ).send()
 
 def check_empty_spaces(shelf_img):
     try:
