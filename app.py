@@ -10,6 +10,8 @@ import io
 import torch
 from transformers import CLIPProcessor, CLIPModel
 from huggingface_hub import hf_hub_download
+import easyocr
+import difflib
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -29,6 +31,9 @@ processor = CLIPProcessor.from_pretrained(model_id)
 
 # Dictionary to store reference images
 reference_images = {}
+
+# Initialize EasyOCR reader
+ocr_reader = easyocr.Reader(['en'], gpu=torch.cuda.is_available())
 
 def compress_image(image, max_size=(800, 800)):
     """Compress image while maintaining aspect ratio."""
@@ -362,6 +367,26 @@ def identify_by_text_prompt(crop_img, product_names):
     best_idx = similarities.argmax()
     return product_names[best_idx], similarities[best_idx]
 
+def ocr_detect_brand(crop_img, brand_list=None):
+    # Convert to RGB if needed
+    if isinstance(crop_img, np.ndarray):
+        crop_img = cv2.cvtColor(crop_img, cv2.COLOR_BGR2RGB)
+    # Upscale crop for better OCR
+    upscale_factor = 2
+    crop_img = cv2.resize(crop_img, (crop_img.shape[1]*upscale_factor, crop_img.shape[0]*upscale_factor), interpolation=cv2.INTER_CUBIC)
+    # Run OCR
+    result = ocr_reader.readtext(crop_img)
+    detected_text = ' '.join([text for _, text, _ in result])
+    logger.info(f"OCR raw: {result}")
+    logger.info(f"OCR detected text: {detected_text}")
+    # Fuzzy match to known brands if provided
+    fuzzy_brand = None
+    if brand_list and detected_text:
+        matches = difflib.get_close_matches(detected_text.upper(), [b.upper() for b in brand_list], n=1, cutoff=0.5)
+        fuzzy_brand = matches[0] if matches else None
+        logger.info(f"Fuzzy matched brand: {fuzzy_brand}")
+    return detected_text, fuzzy_brand
+
 def check_empty_spaces(shelf_img):
     try:
         shelf_hsv = cv2.cvtColor(shelf_img, cv2.COLOR_BGR2HSV)
@@ -371,8 +396,9 @@ def check_empty_spaces(shelf_img):
         wrong_items = 0
 
         debug_lines = []  # For debugging output
-        # Prepare product names for text prompt matching
+        # Prepare product names for text prompt matching and fuzzy matching
         product_names = [Path(item['image_file']).stem.replace('-', ' ').replace('_', ' ') for item in planogram_data]
+        brand_list = list(set([name.split()[0] for name in product_names]))
 
         for item in planogram_data:
             x, y, w, h = item['x'], item['y'], item['width'], item['height']
@@ -409,12 +435,20 @@ def check_empty_spaces(shelf_img):
                         best_name, best_score = identify_wrong_item(shelf_img[y:y+h, x:x+w])
                         # Identify by text prompt
                         text_best_name, text_best_score = identify_by_text_prompt(shelf_img[y:y+h, x:x+w], product_names)
+                        # OCR detection with fuzzy matching
+                        ocr_text, fuzzy_brand = ocr_detect_brand(shelf_img[y:y+h, x:x+w], brand_list)
                         report_lines.append(
                             f"⚠️ {item['name']} (SKU {item['sku']}) appears to be in the wrong spot! (Image similarity: {similarity:.2f})\n"
                             f"   Most likely (image): {best_name} (Similarity: {best_score:.2f})\n"
-                            f"   Most likely (text): {text_best_name} (Similarity: {text_best_score:.2f})"
+                            f"   Most likely (text): {text_best_name} (Similarity: {text_best_score:.2f})\n"
+                            f"   OCR detected: {ocr_text}\n"
+                            f"   Fuzzy matched brand: {fuzzy_brand}"
                         )
-                        debug_line += f" <-- Wrong item detected (Image: {best_name}, {best_score:.2f}; Text: {text_best_name}, {text_best_score:.2f})"
+                        debug_line += f" <-- Wrong item detected (Image: {best_name}, {best_score:.2f}; Text: {text_best_name}, {text_best_score:.2f}; OCR: {ocr_text}; Fuzzy: {fuzzy_brand})"
+                    else:
+                        # Also show OCR for correct items if desired (optional, comment out if not needed)
+                        ocr_text, fuzzy_brand = ocr_detect_brand(shelf_img[y:y+h, x:x+w], brand_list)
+                        debug_line += f" | OCR: {ocr_text} | Fuzzy: {fuzzy_brand}"
             
             debug_lines.append(debug_line)
 
