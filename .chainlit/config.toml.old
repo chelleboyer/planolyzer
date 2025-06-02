@@ -66,26 +66,19 @@ edit_message = true
 
 [UI]
 # Name of the assistant.
-name = "Assistant"
+name = "Planolyzer"
+
+# Description of the assistant. This is used for HTML tags.
+description = "Planogram Analysis Tool"
+
+# Chain of Thought (CoT) display mode. Can be "hidden", "tool_call" or "full".
+cot = "full"
 
 # default_theme = "dark"
 
 # layout = "wide"
 
 # default_sidebar_state = "open"
-
-# Description of the assistant. This is used for HTML tags.
-# description = ""
-
-# Chain of Thought (CoT) display mode. Can be "hidden", "tool_call" or "full".
-cot = "full"
-
-# Specify a CSS file that can be used to customize the user interface.
-# The CSS file can be served from the public directory or via an external link.
-# custom_css = "/public/test.css"
-
-# Specify additional attributes for a custom CSS file
-# custom_css_attributes = "media=\"print\""
 
 # Specify a JavaScript file that can be used to customize the user interface.
 # The JavaScript file can be served from the public directory.
@@ -118,3 +111,12 @@ cot = "full"
 
 [meta]
 generated_by = "2.5.5"
+
+[UI.theme]
+background_color = "#ffffff"
+primary_color = "#4f46e5"
+font_family = "Inter"
+
+[UI.chat]
+background_image = "assets/PP_backgound.jpg"
+background_image_opacity = 0.3
