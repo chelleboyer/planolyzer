@@ -1,23 +1,23 @@
 # Planolyzer
 
-A planogram analysis tool that helps verify if retail shelf displays match their intended layout.
+A planogram analysis tool that helps detect empty spaces on retail shelves.
 
 ## Features
-- Compare uploaded shelf images with reference planograms
-- Detect empty spaces on shelves
-- Provide similarity scores and analysis
-- Easy-to-use interface with visual feedback
+- Upload shelf images for analysis
+- Compare with reference planogram
+- Detect empty spaces and missing products
+- Real-time analysis with visual feedback
 
 ## How to Use
-1. Upload an image of your shelf
-2. The system will automatically compare it with the reference planogram
-3. Get instant feedback on empty spaces and layout compliance
+1. Upload a shelf image
+2. The system will compare it with the reference planogram
+3. Get instant feedback on empty spaces and missing products
 
 ## Technical Details
 - Built with Chainlit
 - Uses CLIP for image comparison
 - OpenCV for image processing
-- PyTorch for deep learning operations
+- Python-based backend
 
 ## Prerequisites
 

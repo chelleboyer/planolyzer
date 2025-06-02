@@ -66,10 +66,10 @@ edit_message = true
 
 [UI]
 # Name of the assistant.
-name = "Assistant"
+name = "Planolyzer"
 
 # Description of the assistant. This is used for HTML tags.
-description = "Planolyzer - Planogram Analysis Tool"
+description = "Planogram Analysis Tool"
 
 # Chain of Thought (CoT) display mode. Can be "hidden", "tool_call" or "full".
 cot = "full"
@@ -111,3 +111,12 @@ cot = "full"
 
 [meta]
 generated_by = "2.5.5"
+
+[UI.theme]
+background_color = "#ffffff"
+primary_color = "#4f46e5"
+font_family = "Inter"
+
+[UI.chat]
+background_image = "assets/PP_backgound.jpg"
+background_image_opacity = 0.3

@@ -1,4 +1,4 @@
-chainlit>=0.7.700
+chainlit>=2.0.0
 opencv-python-headless>=4.8.0
 numpy>=1.24.0
 pillow>=10.0.0
@@ -9,3 +9,5 @@ regex>=2023.6.3
 tqdm>=4.65.0
 python-dotenv>=1.0.0
 gradio>=4.0.0
+huggingface_hub>=0.19.0
+--extra-index-url https://download.pytorch.org/whl/cpu

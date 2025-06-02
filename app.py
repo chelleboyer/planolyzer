@@ -9,6 +9,7 @@ from PIL import Image
 import io
 import torch
 from transformers import CLIPProcessor, CLIPModel
+from huggingface_hub import hf_hub_download
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -22,10 +23,23 @@ PLANOGRAM_IMAGE = BASE_DIR / 'data' / 'shelf_overlay_adjusted_v10.jpg'
 # Load the reference planogram image
 REFERENCE_IMAGE = BASE_DIR / 'data' / 'planogram001' / "planogram.png"
 
-# Initialize CLIP model and processor
+# Initialize CLIP model and processor with a smaller model
 device = "cuda" if torch.cuda.is_available() else "cpu"
-model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to(device)
-processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+model_id = "openai/clip-vit-base-patch16"  # Smaller model variant
+model = CLIPModel.from_pretrained(model_id).to(device)
+processor = CLIPProcessor.from_pretrained(model_id)
+
+def compress_image(image, max_size=(800, 800)):
+    """Compress image while maintaining aspect ratio."""
+    if isinstance(image, np.ndarray):
+        image = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+    
+    # Calculate new dimensions
+    ratio = min(max_size[0]/image.size[0], max_size[1]/image.size[1])
+    new_size = tuple(int(dim * ratio) for dim in image.size)
+    
+    # Resize image
+    return image.resize(new_size, Image.Resampling.LANCZOS)
 
 def validate_image(image, name="image"):
     """Validate that an image is properly loaded and has valid dimensions."""
@@ -51,11 +65,12 @@ except json.JSONDecodeError:
     logger.error(f"Invalid JSON in planogram file {PLANOGRAM_JSON}")
     raise
 
-# Load planogram image
+# Load and compress planogram image
 try:
     planogram_image = cv2.imread(str(PLANOGRAM_IMAGE))
     validate_image(planogram_image, "planogram image")
-    logger.info(f"Successfully loaded planogram image from {PLANOGRAM_IMAGE}")
+    planogram_image = compress_image(planogram_image)
+    logger.info(f"Successfully loaded and compressed planogram image from {PLANOGRAM_IMAGE}")
 except Exception as e:
     logger.error(f"Error loading planogram image: {str(e)}")
     raise
@@ -66,7 +81,7 @@ def load_reference_image():
         ref_img = Image.open(REFERENCE_IMAGE)
         if ref_img is None:
             raise FileNotFoundError(f"Reference image {REFERENCE_IMAGE} not found")
-        return ref_img
+        return compress_image(ref_img)
     except Exception as e:
         print(f"Error loading reference image: {e}")
         return None
@@ -74,9 +89,10 @@ def load_reference_image():
 def compare_images(ref_img, uploaded_img):
     """Compare the uploaded image with the reference image using CLIP."""
     try:
-        # Convert OpenCV image to PIL Image
+        # Convert OpenCV image to PIL Image and compress
         if isinstance(uploaded_img, np.ndarray):
             uploaded_img = Image.fromarray(cv2.cvtColor(uploaded_img, cv2.COLOR_BGR2RGB))
+        uploaded_img = compress_image(uploaded_img)
         
         # Process images with CLIP
         inputs = processor(
@@ -102,7 +118,7 @@ def compare_images(ref_img, uploaded_img):
         return {
             'similarity_score': similarity,
             'difference_percentage': diff_percentage,
-            'is_similar': similarity > 0.85  # CLIP typically needs a higher threshold
+            'is_similar': similarity > 0.85
         }
     except Exception as e:
         logger.error(f"Error in CLIP comparison: {str(e)}")
